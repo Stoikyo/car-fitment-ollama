@@ -19,7 +19,7 @@ imageInput.addEventListener('change', (e) => {
   if (!file || !file.size) {
     return;
   }
-  // no inline preview; preview is shown in results card only
+  setPreview(file);
 });
 
 retryBtn.addEventListener('click', () => {
@@ -28,6 +28,7 @@ retryBtn.addEventListener('click', () => {
   clearError();
   setStatus('');
   retryBtn.disabled = true;
+  clearPreview();
 });
 
 form.addEventListener('submit', async (e) => {
@@ -41,6 +42,8 @@ form.addEventListener('submit', async (e) => {
     showError('Please choose an image to upload.');
     return;
   }
+
+  setPreview(file);
 
   toggleLoading(true);
   setStatus('Uploading image…');
@@ -80,26 +83,52 @@ form.addEventListener('submit', async (e) => {
 
 function renderResults(sections = {}) {
   resultsEl.innerHTML = '';
-  const labels = ['OVERVIEW', 'COMPATIBILITY', 'WHY', 'TOOLS', 'STEPS', 'TIPS'];
+  const labels = ['OVERVIEW', 'SKILL LEVEL REQUIRED', 'HOW TO', 'TIPS', 'RELATED PRODUCTS'];
   labels.forEach((title) => {
-    const contentRaw = sections[title] || '';
+    let contentRaw = sections[title] || '';
+    if ((title === 'TIPS' || title === 'RELATED PRODUCTS') && !contentRaw.trim()) {
+      // force fallback rendering when blank
+      contentRaw = title;
+    }
     const card = document.createElement('article');
     card.className = 'result-card';
     const content = contentRaw?.trim();
     let body = content ? escapeHtml(content).replace(/\n/g, '<br>') : '<span class="muted">Not provided.</span>';
 
-    if (title === 'STEPS' && content) {
-      body = renderSteps(content);
-    } else if (title === 'TOOLS' && content) {
-      body = renderTools(content);
+    if (title === 'HOW TO' && content) {
+      body = renderHowTo(content);
     } else if (title === 'TIPS' && content) {
       body = renderTips(content);
+    } else if (title === 'RELATED PRODUCTS' && content) {
+      body = renderRelated(content);
+    }
+
+    if (title === 'COMPATIBILITY') {
+      const status = parseCompatStatus(content || '');
+      const icon = status === 'ok' ? '✅' : status === 'warn' ? '⚠️' : '❌';
+      card.innerHTML = `
+        <h3>${title}</h3>
+        <div class="compat-inline">
+          <span class="compat-icon">${icon}</span>
+          <div class="result-body">${body}</div>
+        </div>
+      `;
+      resultsEl.appendChild(card);
+      return;
     }
 
     card.innerHTML = `
       <h3>${title}</h3>
       <div class="result-body">${body}</div>
     `;
+
+    if (title === 'OVERVIEW' && previewUrl) {
+      const img = document.createElement('img');
+      img.src = previewUrl;
+      img.alt = 'Uploaded part preview';
+      img.className = 'preview-image';
+      card.appendChild(img);
+    }
 
     resultsEl.appendChild(card);
   });
@@ -149,15 +178,14 @@ function renderSteps(content) {
 }
 
 function renderTips(content) {
-  const parts = content
-    .split(/\n+/)
-    .flatMap((line) => line.split(/^- /).map((l) => l.trim()))
-    .map((l) => l.trim())
-    .filter(Boolean);
-  if (!parts.length) {
-    return '<span class="muted">Not provided.</span>';
-  }
-  const items = parts.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('');
+  const parts = cleanList(content, ['tips']);
+  const fallback = [
+    'Double-check fitment against VIN or OEM part number.',
+    'Inspect seals/gaskets and replace if worn.',
+    'Verify orientation and seating before closing housings.',
+  ];
+  const useItems = parts.length >= 2 ? parts : fallback;
+  const items = useItems.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('');
   return `<ul class="tips-list">${items}</ul>`;
 }
 
@@ -166,31 +194,87 @@ function renderTools(content) {
     .split(/\n+|,/) // split by newlines or commas
     .map((l) => l.trim())
     .filter(Boolean);
-  if (!parts.length) {
-    return '<span class="muted">Not provided.</span>';
-  }
-  const items = parts.map((tool) => `<li>${escapeHtml(tool)}</li>`).join('');
+  const fallback = ['Gloves for protection', 'Clean rag', 'Light source'];
+  const items = (parts.length ? parts : fallback).map((tool) => `<li>${escapeHtml(tool)}</li>`).join('');
   return `<ul class="tips-list">${items}</ul>`;
 }
 
+function renderRelated(content) {
+  const parts = cleanList(content, ['related products', 'related']);
+  const fallback = [
+    'Companion filters (e.g., cabin filter) for the same service interval.',
+    'Compatible fluids or seals that pair with this part.',
+  ];
+  const items = (parts.length ? parts : fallback).map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+  return `<ul class="tips-list">${items}</ul>`;
+}
+
+function renderHowTo(content) {
+  const lines = content.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const tools = [];
+  const steps = [];
+  let current = '';
+
+  lines.forEach((line) => {
+    const normalized = line.replace(/^[-•]\s*/, '');
+    const lower = normalized.toLowerCase();
+    if (lower.startsWith('tools')) {
+      current = 'tools';
+      return;
+    }
+    if (lower.startsWith('steps')) {
+      current = 'steps';
+      return;
+    }
+    if (current === 'tools') {
+      tools.push(normalized);
+    } else {
+      steps.push(normalized);
+    }
+  });
+
+  const toolsList = tools.length ? tools : ['Gloves for protection', 'Clean rag', 'Light source'];
+  const stepsContent = steps.length ? steps.join('\n') : '';
+
+  const toolsBlock = `<div class="howto-block"><strong>Tools</strong><ul class="tips-list">${toolsList
+    .map((t) => `<li>${escapeHtml(t)}</li>`)
+    .join('')}</ul></div>`;
+
+  const stepsBlock = stepsContent
+    ? `<div class="howto-block"><strong>Steps</strong>${renderSteps(stepsContent)}</div>`
+    : '';
+
+  const blocks = [toolsBlock, stepsBlock].filter(Boolean).join('');
+  return blocks || '<span class="muted">Not provided.</span>';
+}
+
+function cleanList(content, bannedHeadings = []) {
+  return content
+    .split(/\n+/)
+    .flatMap((line) => line.split(/^- /).map((l) => l.trim()))
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .filter((line) => {
+      const lower = line.toLowerCase();
+      return !bannedHeadings.some((h) => lower === h || lower === `${h}:`);
+    });
+}
+
 function renderCompatBanner(sections = {}) {
-  const compatRaw = sections.COMPATIBILITY || '';
-  const why = sections.WHY || '';
-  const compat = compatRaw.trim();
-  if (!compat) {
+  const resultRaw = sections.RESULT || '';
+  const result = resultRaw.trim();
+  if (!result) {
     compatBanner.style.display = 'none';
     compatBanner.innerHTML = '';
     return;
   }
-  const status = parseCompatStatus(compat);
+  const status = parseCompatStatus(result);
   const icon = status === 'ok' ? '✅' : status === 'warn' ? '⚠️' : '❌';
-  const explanation = why?.trim() || compat;
   compatBanner.innerHTML = `
     <div class="compat-title">
       <span class="compat-label">Result</span>
-      <span class="compat-status">${icon} ${escapeHtml(compat)}</span>
+      <span class="compat-status">${icon} ${escapeHtml(result)}</span>
     </div>
-    <div class="compat-desc">${escapeHtml(explanation)}</div>
   `;
   compatBanner.style.display = 'flex';
 }
@@ -207,6 +291,20 @@ function clearResults() {
   resultsEl.innerHTML = '';
   compatBanner.style.display = 'none';
   compatBanner.innerHTML = '';
+}
+
+function setPreview(file) {
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+  }
+  previewUrl = URL.createObjectURL(file);
+}
+
+function clearPreview() {
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+    previewUrl = '';
+  }
 }
 
 function showSkeleton() {

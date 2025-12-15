@@ -252,10 +252,10 @@ button:disabled {
   flex-direction: column;
   gap: 6px;
   margin: 16px 0 12px;
-  padding: 14px 16px;
+  padding: 18px 20px;
   border: 1px solid var(--border);
-  background: #f3f6ff;
-  border-radius: 12px;
+  background: #eef3ff;
+  border-radius: 14px;
   box-shadow: var(--shadow);
 }
 
@@ -264,6 +264,7 @@ button:disabled {
   align-items: center;
   gap: 10px;
   font-weight: 700;
+  font-size: 1.15rem;
 }
 
 .compat-desc {
@@ -273,12 +274,13 @@ button:disabled {
 .compat-label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--muted);
 }
 
 .compat-status {
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.2rem;
 }
 
 @keyframes spin {
@@ -289,8 +291,8 @@ button:disabled {
 
 .results {
   margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
@@ -317,6 +319,17 @@ button:disabled {
   line-height: 1.5;
 }
 
+.compat-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.compat-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
 .result-card h3 {
   margin-top: 0;
   margin-bottom: 8px;
@@ -333,13 +346,25 @@ button:disabled {
   color: var(--muted);
 }
 
+.howto-block {
+  margin-bottom: 10px;
+}
+
 .result-card p {
   margin: 0;
   color: var(--muted);
 }
 
 .preview-image {
-  display: none;
+  display: block;
+  margin-top: 10px;
+  max-width: 100%;
+  max-height: 200px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--border);
 }
 
 .preview-row {
@@ -367,10 +392,6 @@ button:disabled {
 @media (max-width: 640px) {
   .page {
     padding: 20px 14px 40px;
-  }
-
-  .results {
-    grid-template-columns: 1fr;
   }
 
   .preview-row {

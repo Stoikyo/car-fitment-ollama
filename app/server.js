@@ -67,14 +67,15 @@ app.post('/api/analyse', upload.single('image'), async (req, res) => {
     const resizeDuration = performance.now() - resizeStart;
     const base64Image = processedBuffer.toString('base64');
 
-    const systemPrompt = `You are a concise automotive fitment assistant. Output exactly these headings and under each heading include only the content (do NOT repeat any headings inside sections). Keep 1–2 short lines per section; STEPS max 3 numbered steps. Be specific:
-OVERVIEW: Identify the item seen in the image and key markings/features/condition.
-COMPATIBILITY: (one of ✅ Compatible | ⚠️ Check fitment | ❌ Not compatible) plus 1 short reason tied to the vehicle.
-WHY: Briefly expand on compatibility decision (e.g., fit notes, size/part-number clues, mismatches).
-TOOLS: Bulleted or comma-separated essentials.
-STEPS: Max 3 numbered steps for checking/installing/validating fit. Include any safety considerations and pre/post actions (e.g., drain oil before replacing filter, refill after).
-TIPS: 2–3 quick cautions or cross-checks.
-Keep it brief and specific using the image and provided vehicle info.`;
+    const systemPrompt = `You are a concise automotive fitment assistant. Output exactly these headings and under each heading include only the content (do NOT repeat any headings inside sections). Keep 1–2 short lines per section except HOW TO which can have up to 10 numbered steps. Be specific and complete each step:
+RESULT: Start with one of ✅ Compatible | ⚠️ Check fitment | ❌ Not compatible and a short reason tied to the vehicle.
+COMPATIBILITY: Restate the status and why (e.g., part number/size cues, vehicle match or mismatch).
+OVERVIEW: Identify the item in the image, key markings, features, or condition.
+SKILL LEVEL REQUIRED: How DIY-friendly this is (e.g., Easy / Moderate / Pro) and brief rationale.
+HOW TO: Start with "Tools:" as a bulleted list, then "Steps:" as numbered steps (max 10) including safety considerations and pre/post actions (e.g., drain/refill fluids, torque notes). Do not truncate steps; finish each action.
+TIPS: 2–3 specific cautions/cross-checks tied to the photo and vehicle (e.g., orientation, sealing surfaces, torque). Always include at least two tips.
+RELATED PRODUCTS: 1–2 complementary parts the user might consider for the same vehicle (e.g., companion filters/fluids/hardware). Always include at least one related product suggestion.
+Keep it brief and specific using the image and provided vehicle info. Ensure all headings have content, avoid repeating the heading text.`;
 
     const details = [
       `Year: ${year || 'Unknown'}`,
@@ -112,11 +113,11 @@ Keep it brief and specific using the image and provided vehicle info.`;
           },
         ],
         options: {
-          num_predict: 220,
+          num_predict: 512,
           temperature: 0.2,
         },
-        stream: false,
-      };
+      stream: false,
+    };
 
       const { content, durationMs } = await callOllama({ payload: ollamaPayload });
       rawText = content;
@@ -198,7 +199,7 @@ async function callOpenAI({ systemPrompt, details, base64Image }) {
   const body = {
     model: OPENAI_MODEL,
     temperature: 0.2,
-    max_tokens: 220,
+    max_tokens: 512,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent },
@@ -231,7 +232,7 @@ async function callOpenAI({ systemPrompt, details, base64Image }) {
 }
 
 function parseSections(text) {
-  const labels = ['OVERVIEW', 'COMPATIBILITY', 'WHY', 'TOOLS', 'STEPS', 'TIPS'];
+  const labels = ['RESULT', 'COMPATIBILITY', 'OVERVIEW', 'SKILL LEVEL REQUIRED', 'HOW TO', 'TIPS', 'RELATED PRODUCTS'];
   const sections = {};
   labels.forEach((label) => {
     sections[label] = '';
