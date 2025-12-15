@@ -39,10 +39,9 @@ app.post('/api/analyse', upload.single('image'), async (req, res) => {
         .json({ error: 'Please upload an image file (max 5MB).' });
     }
 
-    const { year = '', make = '', model = '', engine = '', productUrl = '', notes = '' } =
-      req.body || {};
-    if (!make || !model || !notes) {
-      return res.status(400).json({ error: 'Make, model, and description/notes are required.' });
+    const { year = '', make = '', model = '', productUrl = '', notes = '' } = req.body || {};
+    if (!year || !make || !model || !notes) {
+      return res.status(400).json({ error: 'Year, make, model, and description/notes are required.' });
     }
 
     const resizeStart = performance.now();
@@ -68,20 +67,19 @@ app.post('/api/analyse', upload.single('image'), async (req, res) => {
     const resizeDuration = performance.now() - resizeStart;
     const base64Image = processedBuffer.toString('base64');
 
-    const systemPrompt = `You are a concise automotive fitment assistant. Output exactly these headings and under each heading include only the content (do NOT repeat any headings inside sections). Keep 1–2 short lines per section; STEPS max 3 numbered steps. First state what the item appears to be from the image, then assess fitment against the provided vehicle; call out any mismatches.
-OVERVIEW:
-COMPATIBILITY: (one of ✅ Compatible | ⚠️ Check fitment | ❌ Not compatible)
-WHY:
-TOOLS:
-STEPS:
-TIPS:
+    const systemPrompt = `You are a concise automotive fitment assistant. Output exactly these headings and under each heading include only the content (do NOT repeat any headings inside sections). Keep 1–2 short lines per section; STEPS max 3 numbered steps. Be specific:
+OVERVIEW: Identify the item seen in the image and key markings/features/condition.
+COMPATIBILITY: (one of ✅ Compatible | ⚠️ Check fitment | ❌ Not compatible) plus 1 short reason tied to the vehicle.
+WHY: Briefly expand on compatibility decision (e.g., fit notes, size/part-number clues, mismatches).
+TOOLS: Bulleted or comma-separated essentials.
+STEPS: Max 3 numbered steps for checking/installing/validating fit. Include any safety considerations and pre/post actions (e.g., drain oil before replacing filter, refill after).
+TIPS: 2–3 quick cautions or cross-checks.
 Keep it brief and specific using the image and provided vehicle info.`;
 
     const details = [
       `Year: ${year || 'Unknown'}`,
       `Make: ${make || 'Unknown'}`,
       `Model: ${model || 'Unknown'}`,
-      `Engine: ${engine || 'Unknown'}`,
       productUrl ? `Product URL: ${productUrl}` : '',
       notes ? `Notes: ${notes}` : '',
     ]

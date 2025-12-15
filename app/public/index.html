@@ -10,7 +10,6 @@
     <main class="page">
       <header class="hero">
         <div>
-          <p class="eyebrow">Local prototype</p>
           <h1>Car Part Fit Checker</h1>
           <p class="lede">
             Upload a part photo, add vehicle details, and get quick fitment guidance powered by Ollama.
@@ -23,12 +22,14 @@
           <div class="field">
             <label for="image">Part photo <span class="required">*</span></label>
             <input type="file" id="image" name="image" accept="image/*" required />
+            <div class="preview-row">
+            </div>
           </div>
 
           <div class="grid">
             <div class="field">
-              <label for="year">Year</label>
-              <input type="text" id="year" name="year" placeholder="e.g. 2019" />
+              <label for="year">Year <span class="required">*</span></label>
+              <input type="number" id="year" name="year" placeholder="e.g. 2019" inputmode="numeric" pattern="[0-9]*" required />
             </div>
             <div class="field">
               <label for="make">Make <span class="required">*</span></label>
@@ -38,15 +39,6 @@
               <label for="model">Model <span class="required">*</span></label>
               <input type="text" id="model" name="model" placeholder="e.g. Camry" required />
             </div>
-            <div class="field">
-              <label for="engine">Engine</label>
-              <input type="text" id="engine" name="engine" placeholder="e.g. 2.5L" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="productUrl">Product URL (optional)</label>
-            <input type="url" id="productUrl" name="productUrl" placeholder="https://..." />
           </div>
 
           <div class="field">
@@ -54,15 +46,34 @@
             <textarea id="notes" name="notes" rows="3" placeholder="Describe the part and any details" required></textarea>
           </div>
 
-          <button type="submit" id="submitBtn">Analyse</button>
-          <div class="feedback">
+          <div class="field">
+            <label for="productUrl">Product URL (optional)</label>
+            <input type="url" id="productUrl" name="productUrl" placeholder="https://..." />
+          </div>
+
+          <div class="actions-row">
+            <button type="submit" id="submitBtn">Analyse</button>
+            <button type="button" id="retryBtn" class="link-button" disabled>Start over</button>
+          </div>
+          <div class="feedback" aria-live="polite">
             <div class="spinner" id="spinner" aria-hidden="true"></div>
             <p id="status" class="status"></p>
           </div>
         </form>
       </section>
 
+      <div id="errorPanel" class="error-panel" aria-live="assertive" style="display: none;"></div>
+
+      <div id="compatBanner" class="compat-banner" style="display: none;"></div>
+
       <section id="results" class="results"></section>
+
+      <footer class="footer">
+        <p class="caveat">
+          This tool is for informational purposes only. Always consult a qualified mechanic or parts retailer to confirm fitment before purchasing or installing parts.
+        </p>
+        <p class="copyright">Copyright Tinkeru 2025</p>
+      </footer>
     </main>
 
     <script src="app.js"></script>
