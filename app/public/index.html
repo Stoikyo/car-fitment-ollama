@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Part Fit Checker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Local prototype</p>
+          <h1>Car Part Fit Checker</h1>
+          <p class="lede">
+            Upload a part photo, add vehicle details, and get quick fitment guidance powered by Ollama.
+          </p>
+        </div>
+      </header>
+
+      <section class="card">
+        <form id="analyseForm">
+          <div class="field">
+            <label for="image">Part photo <span class="required">*</span></label>
+            <input type="file" id="image" name="image" accept="image/*" required />
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="year">Year</label>
+              <input type="text" id="year" name="year" placeholder="e.g. 2019" />
+            </div>
+            <div class="field">
+              <label for="make">Make <span class="required">*</span></label>
+              <input type="text" id="make" name="make" placeholder="e.g. Toyota" required />
+            </div>
+            <div class="field">
+              <label for="model">Model <span class="required">*</span></label>
+              <input type="text" id="model" name="model" placeholder="e.g. Camry" required />
+            </div>
+            <div class="field">
+              <label for="engine">Engine</label>
+              <input type="text" id="engine" name="engine" placeholder="e.g. 2.5L" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="productUrl">Product URL (optional)</label>
+            <input type="url" id="productUrl" name="productUrl" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <label for="notes">Description / notes <span class="required">*</span></label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Describe the part and any details" required></textarea>
+          </div>
+
+          <button type="submit" id="submitBtn">Analyse</button>
+          <div class="feedback">
+            <div class="spinner" id="spinner" aria-hidden="true"></div>
+            <p id="status" class="status"></p>
+          </div>
+        </form>
+      </section>
+
+      <section id="results" class="results"></section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
