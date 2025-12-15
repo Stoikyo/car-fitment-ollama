@@ -3,7 +3,8 @@
 Small web app that analyzes a part photo and vehicle details using an Ollama vision model, then returns fitment guidance in clear sections. Everything runs locally via Docker Compose.
 
 ## Demo
-- ![Screenshot](car-part-fit-checker-empty-state.png)
+![Screenshot](car-part-fit-checker-empty-state.png)
+
 - Loom walkthrough: _add link_
 
 ## Prerequisites
