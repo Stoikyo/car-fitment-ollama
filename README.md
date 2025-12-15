@@ -30,7 +30,7 @@ Set these env vars (e.g., in `.env`):
 
 ## Performance notes
 - First run downloads a large model; allow a few minutes on first pull.
-- Inference on CPU laptops can take ~30–120s, faster after the first request once the model is warm.
+- Inference on CPU laptops can take ~30–120s (possibly longer, if you have an old machine), faster after the first request once the model is warm.
 - Smaller images process faster; the server resizes oversized uploads to help.
 
 ## Troubleshooting
