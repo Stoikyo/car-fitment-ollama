@@ -4,8 +4,7 @@ Small web app that analyzes a part photo and vehicle details using an Ollama vis
 
 ## Demo
 ![Screenshot](car-part-fit-checker-empty-state.png)
-
-- Loom walkthrough: _add link_
+! [Demo](<div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.loom.com/embed/e952798714474ea2b8471853112b56c9" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>)
 
 ## Prerequisites
 - Docker Desktop
